@@ -1,0 +1,18 @@
+[package]
+name = "enventory"
+version = "0.1.0"
+edition.workspace = true
+description = "A typed, self-documenting environment variable registry"
+license = "MIT"
+
+[dependencies]
+inventory = { workspace = true, optional = true }
+
+[features]
+default = []
+inventory = ["dep:inventory"]
+clap = ["inventory", "dep:clap"]
+
+[dependencies.clap]
+workspace = true
+optional = true

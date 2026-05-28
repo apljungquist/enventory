@@ -1,0 +1,12 @@
+[package]
+name = "example-bin-no-clap"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+enventory = { workspace = true, features = ["inventory"] }
+example-lib = { workspace = true }
+
+[dev-dependencies]
+expect-test = { workspace = true }

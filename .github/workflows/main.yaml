@@ -1,0 +1,14 @@
+name: "Main"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Run checks
+        run: nix develop --ignore-env --command make check

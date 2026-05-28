@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "crates/*",
+    "examples/*",
+]
+resolver = "2"
+
+[workspace.dependencies]
+clap = { version = "4", features = ["derive", "env"] }
+enventory = { path = "crates/enventory" }
+example-lib = { path = "examples/example-lib" }
+expect-test = "1"
+inventory = "0.3"
+
+[workspace.package]
+edition = "2021"
