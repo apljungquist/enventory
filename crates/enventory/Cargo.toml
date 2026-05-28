@@ -1,9 +1,10 @@
 [package]
 name = "enventory"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 description = "A typed, self-documenting environment variable registry"
 license = "MIT"
+readme = "../../README.md"
 
 [dependencies]
 inventory = { workspace = true, optional = true }
