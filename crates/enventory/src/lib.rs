@@ -15,13 +15,13 @@
 //! // If the environment variable is not set or cannot be parsed,
 //! // then the `8080` is used as fallback.
 //!
-//! enventory::define!(
+//! enventory::define! {
 //!     /// Port to listen on
 //!     pub static MY_PORT: u16 = 8080
-//! );
+//! }
 //!
 //! fn serve() {
-//!     println!("Serving on port {}", *MY_PORT)
+//!     println!("Listening on port {}", *MY_PORT)
 //! }
 //!
 //! // Binary
@@ -46,33 +46,39 @@
 //! Running the program with `--help` prints:
 //!
 //! ```text
-//! Usage: myhttp-bin [OPTIONS]
+//! Usage: example-minimal [OPTIONS]
 //!
 //! Options:
-//!       --myhttp-port <MYHTTP_PORT>  Port to listen on [env: MYHTTP_PORT=] [default: 8080]
-//!   -h, --help                       Print help
+//!       --my-port <MY_PORT>  Port to listen on [env: MY_PORT=] [default: 8080]
+//!   -h, --help               Print help
 //! ```
+//!
+//! The runnable equivalent of this example lives in `examples/example-minimal`,
+//! and its integration test asserts that the `--help` block above matches what
+//! the binary actually prints.
 
-mod core;
 #[cfg(feature = "clap")]
-mod feat_clap;
+mod clap_ext;
 #[cfg(feature = "inventory")]
-mod feat_inventory;
+mod inventory_core;
+#[cfg(feature = "inventory")]
+mod inventory_ext;
 mod macros;
+mod var_core;
 
 #[cfg(feature = "clap")]
-pub use feat_clap::{apply_matches, apply_matches_for, args, EnvArgs};
+pub use clap_ext::{EnvArgs, apply_matches, apply_matches_for, args};
 #[doc(hidden)]
 #[cfg(feature = "inventory")]
 pub use inventory;
 
-pub use self::core::{parse_boolish, parse_from_str, parse_some, Item};
 #[cfg(feature = "clap")]
-pub(crate) use self::feat_inventory::check_consistency;
-#[cfg(feature = "clap")]
-pub(crate) use self::feat_inventory::iter;
+pub(crate) use self::inventory_core::iter;
 #[doc(hidden)]
 #[cfg(feature = "inventory")]
-pub use self::feat_inventory::ItemEntry;
+pub use self::inventory_core::{Item, VarRef};
+#[cfg(feature = "clap")]
+pub(crate) use self::inventory_ext::check_consistency;
 #[cfg(feature = "inventory")]
-pub use self::feat_inventory::{validate_all, ParseError, ValidationErrors};
+pub use self::inventory_ext::{ValidationErrors, validate_all};
+pub use self::var_core::{ParseError, Var, option_repr, parse_boolish, parse_from_str, parse_some};

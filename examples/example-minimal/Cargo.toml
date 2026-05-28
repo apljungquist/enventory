@@ -1,0 +1,13 @@
+[package]
+name = "example-minimal"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+clap = { workspace = true }
+enventory = { workspace = true, features = ["clap"] }
+
+[dev-dependencies]
+expect-test = { workspace = true }
+test-utils = { workspace = true }

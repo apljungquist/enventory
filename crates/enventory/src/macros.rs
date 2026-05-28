@@ -1,81 +1,75 @@
 #[macro_export]
 macro_rules! define {
-    // With doc, default, and custom parser
+    // Custom parser + custom repr
     (
-        #[doc = $doc:literal]
-        $(#[$rest:meta])*
+        $(#[doc = $doc:literal])*
+        $vis:vis static $name:ident : $ty:ty = $default:expr, parse = $parser:expr, repr = $repr:expr
+    ) => {
+        $(#[doc = $doc])*
+        $vis static $name: $crate::Var<$ty, ::std::string::String> = $crate::Var::new(
+            stringify!($name),
+            $parser,
+            || $default,
+        );
+
+        $crate::__register_entry!(
+            $name,
+            concat!($($doc, "\n",)*),
+            || ($repr)($name.default_value())
+        );
+    };
+    // Custom parser, default repr (uses Display)
+    (
+        $(#[doc = $doc:literal])*
         $vis:vis static $name:ident : $ty:ty = $default:expr, parse = $parser:expr
     ) => {
-        $(#[$rest])*
-        $vis static $name: $crate::Item<$ty> = $crate::Item::new(
+        $(#[doc = $doc])*
+        $vis static $name: $crate::Var<$ty, ::std::string::String> = $crate::Var::new(
             stringify!($name),
-            stringify!($ty),
-            || $default,
             $parser,
+            || $default,
         );
 
         $crate::__register_entry!(
             $name,
-            $doc,
-            stringify!($ty),
-            stringify!($default)
+            concat!($($doc, "\n",)*),
+            || ::std::option::Option::Some(::std::format!("{}", $name.default_value()))
         );
     };
-    // Without doc, with default and custom parser
+    // Default parser (FromStr) + custom repr
     (
-        $vis:vis static $name:ident : $ty:ty = $default:expr, parse = $parser:expr
+        $(#[doc = $doc:literal])*
+        $vis:vis static $name:ident : $ty:ty = $default:expr, repr = $repr:expr
     ) => {
-        $vis static $name: $crate::Item<$ty> = $crate::Item::new(
+        $(#[doc = $doc])*
+        $vis static $name: $crate::Var<$ty, <$ty as ::core::str::FromStr>::Err> = $crate::Var::new(
             stringify!($name),
-            stringify!($ty),
+            <$ty as ::core::str::FromStr>::from_str,
             || $default,
-            $parser,
         );
 
         $crate::__register_entry!(
             $name,
-            "",
-            stringify!($ty),
-            stringify!($default)
+            concat!($($doc, "\n",)*),
+            || ($repr)($name.default_value())
         );
     };
-    // With doc and default (uses FromStr)
+    // Default parser (FromStr), default repr (uses Display)
     (
-        #[doc = $doc:literal]
-        $(#[$rest:meta])*
+        $(#[doc = $doc:literal])*
         $vis:vis static $name:ident : $ty:ty = $default:expr
     ) => {
-        $(#[$rest])*
-        $vis static $name: $crate::Item<$ty> = $crate::Item::new(
+        $(#[doc = $doc])*
+        $vis static $name: $crate::Var<$ty, <$ty as ::core::str::FromStr>::Err> = $crate::Var::new(
             stringify!($name),
-            stringify!($ty),
+            <$ty as ::core::str::FromStr>::from_str,
             || $default,
-            $crate::parse_from_str,
         );
 
         $crate::__register_entry!(
             $name,
-            $doc,
-            stringify!($ty),
-            stringify!($default)
-        );
-    };
-    // Without doc, with default (uses FromStr)
-    (
-        $vis:vis static $name:ident : $ty:ty = $default:expr
-    ) => {
-        $vis static $name: $crate::Item<$ty> = $crate::Item::new(
-            stringify!($name),
-            stringify!($ty),
-            || $default,
-            $crate::parse_from_str,
-        );
-
-        $crate::__register_entry!(
-            $name,
-            "",
-            stringify!($ty),
-            stringify!($default)
+            concat!($($doc, "\n",)*),
+            || ::std::option::Option::Some(::std::format!("{}", $name.default_value()))
         );
     };
 }
@@ -84,15 +78,13 @@ macro_rules! define {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __register_entry {
-    ($name:ident, $doc:expr, $ty_str:expr, $default_str:expr) => {
+    ($name:ident, $desc:expr, $default_repr:expr) => {
         $crate::inventory::submit! {
-            $crate::ItemEntry {
-                name: stringify!($name),
-                description: $doc,
-                type_name: $ty_str,
-                default_repr: $default_str,
+            $crate::Item {
+                item: &$name,
+                description: $desc,
                 crate_name: env!("CARGO_PKG_NAME"),
-                init: |override_val| $name.init(override_val),
+                default_repr: $default_repr,
             }
         }
     };
@@ -102,28 +94,19 @@ macro_rules! __register_entry {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __register_entry {
-    ($name:ident, $doc:expr, $ty_str:expr, $default_str:expr) => {};
+    ($name:ident, $desc:expr, $default_repr:expr) => {};
 }
 
 /// Like [`define!`], but for `bool` variables parsed with [`crate::parse_boolish`].
 #[macro_export]
 macro_rules! define_boolish {
     (
-        #[doc = $doc:literal]
-        $(#[$rest:meta])*
+        $(#[doc = $doc:literal])*
         $vis:vis static $name:ident : bool = $default:expr
     ) => {
-        $crate::define!(
-            #[doc = $doc]
-            $(#[$rest])*
+        $crate::define! {
+            $(#[doc = $doc])*
             $vis static $name: bool = $default, parse = $crate::parse_boolish
-        );
-    };
-    (
-        $vis:vis static $name:ident : bool = $default:expr
-    ) => {
-        $crate::define!(
-            $vis static $name: bool = $default, parse = $crate::parse_boolish
-        );
+        }
     };
 }

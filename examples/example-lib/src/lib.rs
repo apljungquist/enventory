@@ -1,5 +1,8 @@
 use std::fmt;
 
+use clap::builder::{ValueParser, ValueParserFactory};
+
+#[derive(Clone, Debug)]
 pub enum Color {
     Auto,
     Always,
@@ -30,7 +33,14 @@ impl std::str::FromStr for Color {
 }
 
 // A custom type that doesn't implement FromStr.
+#[derive(Clone, Debug)]
 pub struct Timeout(u64);
+
+impl Timeout {
+    pub const fn new(seconds: u64) -> Self {
+        Self(seconds)
+    }
+}
 
 impl fmt::Display for Timeout {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -45,40 +55,56 @@ fn parse_timeout(s: &str) -> Result<Timeout, String> {
         .map_err(|e| format!("expected timeout in seconds (e.g. '30' or '30s'), got '{s}': {e}"))
 }
 
+impl ValueParserFactory for Color {
+    type Parser = ValueParser;
+    fn value_parser() -> Self::Parser {
+        ValueParser::from(<Color as std::str::FromStr>::from_str)
+    }
+}
+
+impl ValueParserFactory for Timeout {
+    type Parser = ValueParser;
+    fn value_parser() -> Self::Parser {
+        ValueParser::from(parse_timeout)
+    }
+}
+
 // The docstring is optional:
-enventory::define!(
+enventory::define! {
     pub static EXAMPLE_VERBOSE: bool = false
-);
+}
 
 // The parser can be overridden:
-enventory::define!(
+enventory::define! {
     /// Enable trace mode
     pub static EXAMPLE_TRACE: bool = false, parse = enventory::parse_boolish
-);
+}
 
 // Boolean environment variables with flexible parsing can be defined with a shorthand macro:
-enventory::define_boolish!(
+enventory::define_boolish! {
     /// Enable debug mode
     pub static EXAMPLE_DEBUG: bool = false
-);
+}
 
 // Custom types can also be parsed using `FromStr`:
-enventory::define!(
+enventory::define! {
     /// When to use colored output
+    ///
+    /// Accepts: auto, always, never
     pub static EXAMPLE_COLOR: Color = Color::Auto
-);
+}
 
 // Custom types that don't implement `FromStr` can be parsed with a custom parser:
-enventory::define!(
+enventory::define! {
     /// Request timeout
     pub static EXAMPLE_TIMEOUT: Timeout = Timeout(30), parse = parse_timeout
-);
+}
 
 // Optional values default to `None` and parse the inner type when set:
-enventory::define!(
+enventory::define! {
     /// Optional port override
-    pub static EXAMPLE_PORT: Option<u16> = None, parse = enventory::parse_some::<u16>
-);
+    pub static EXAMPLE_PORT: Option<u16> = None, parse = enventory::parse_some::<u16>, repr = enventory::option_repr
+}
 
 pub fn do_work() {
     let verbose = *EXAMPLE_VERBOSE;
@@ -91,5 +117,7 @@ pub fn do_work() {
         Some(p) => p.to_string(),
         None => "none".to_string(),
     };
-    println!("Working with verbose={verbose}, debug={debug}, trace={trace}, color={color}, timeout={timeout}, port={port_str}");
+    println!(
+        "Working with verbose={verbose}, debug={debug}, trace={trace}, color={color}, timeout={timeout}, port={port_str}"
+    );
 }

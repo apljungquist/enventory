@@ -16,20 +16,37 @@ _A typed, self-documenting environment variable registry for Rust._
 Add `enventory` as a dependency (no features needed):
 
 ```rust
-enventory::define!(
+enventory::define! {
     /// Port to listen on
-    pub static MYHTTP_PORT: u16 = 8080
-);
+    pub static MY_PORT: u16 = 8080
+}
 
 pub fn start_server() {
-    let port = *MYHTTP_PORT;
+    let port = *MY_PORT;
     println!("Listening on port {port}");
 }
 ```
 
-`MYHTTP_PORT` will always be a u16.
+`MY_PORT` will always be a `u16`.
 If the environment variable is not set or cannot be parsed,
 then the fallback value of `8080` is used.
+
+If feature unification does not enable the `inventory` feature then this expands to roughly:
+
+```rust
+static MY_PORT: Var<u16, <u16 as FromStr>::Err> = Var::new("MY_PORT", <u16 as FromStr>::from_str, || 8080);
+```
+
+Which is roughly equivalent to:
+
+```rust
+static MY_PORT: LazyLock<u16> = LazyLock::new(|| {
+    env::var("MY_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(8080)
+});
+```
 
 See [example-lib](examples/example-lib/src/lib.rs) for more patterns.
 
@@ -48,7 +65,7 @@ struct Cli {
 
 fn main() {
     let _cli = Cli::parse();
-    myhttp::start_server().unwrap();
+    serve();
 }
 ```
 
@@ -58,17 +75,17 @@ then the error will be reported to the user when the arguments are parsed.
 Running the program with `--help` prints:
 
 ```text
-Usage: myhttp-bin [OPTIONS]
+Usage: example-minimal [OPTIONS]
 
 Options:
-      --myhttp-port <MYHTTP_PORT>  Port to listen on [env: MYHTTP_PORT=] [default: 8080]
-  -h, --help                       Print help
+      --my-port <MY_PORT>  Port to listen on [env: MY_PORT=] [default: 8080]
+  -h, --help               Print help
 ```
 
 Other patterns:
-- [procedural clap](examples/example-bin/src/procedural.rs)
-- [without clap](examples/example-bin-no-clap/src/main.rs)
-- [without validation](examples/example-bin-lazy/src/main.rs)
+- [procedural clap](examples/example-bin-clap/src/procedural.rs)
+- [without clap](examples/example-bin-inventory/src/main.rs)
+- [without validation](examples/example-bin-no-inventory/src/main.rs)
 
 ## Cargo features
 

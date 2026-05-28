@@ -9,8 +9,10 @@ resolver = "2"
 clap = { version = "4", features = ["derive", "env"] }
 enventory = { path = "crates/enventory" }
 example-lib = { path = "examples/example-lib" }
+example-lib-no-macros = { path = "examples/example-lib-no-macros" }
 expect-test = "1"
 inventory = "0.3"
+test-utils = { path = "crates/test-utils" }
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
