@@ -16,7 +16,20 @@ help:
 ## Checks
 ## ------
 
-check: check_build check_docs check_format check_generated_files check_lint check_tests
+check: check_build check_dep_graph check_docs check_format check_generated_files check_lint check_tests
+
+# TODO: Investigate other ways of verifying that binaries built without `enventory-core` does not
+#  pull it in via a library that only uses `enventory`
+
+## Verify that the dependencies are pulled in only when expected
+check_dep_graph:
+	@tree=$$(cargo tree -p example-lib -e normal --prefix none); \
+	if echo "$$tree" | grep -qE '^(inventory|enventory-core) '; then \
+		echo "ERROR: example-lib pulled inventory/enventory-core; library should not depend on them" >&2; \
+		echo "$$tree" >&2; \
+		exit 1; \
+	fi
+.PHONY: check_dep_graph
 
 ## _
 check_build:

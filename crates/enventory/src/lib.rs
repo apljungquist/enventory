@@ -1,35 +1,38 @@
-//! A typed, self-documenting environment variable registry.
+//! A typed, self-documenting environment-variable registry.
 //!
-//! **For library authors**:
-//! interact with strongly typed constants instead of stringly typed environment variables.
+//! # For library authors
 //!
-//! **For binary authors**:
-//! validate environment variables at startup and surface them in `--help` text.
-//!
-//! # Example
+//! Declare typed env vars with [`define!`] that are parsed once:
 //!
 //! ```
-//! // Library
-//! // =======
-//! // `MY_PORT` is always a `u16`.
-//! // If the environment variable is not set or cannot be parsed,
-//! // then the `8080` is used as fallback.
-//!
-//! enventory::define!(
+//! enventory::define! {
 //!     /// Port to listen on
 //!     pub static MY_PORT: u16 = 8080
-//! );
-//!
-//! fn serve() {
-//!     println!("Serving on port {}", *MY_PORT)
 //! }
 //!
-//! // Binary
-//! // ======
-//! // Augments the `Cli` with environment variables from dependencies.
-//! // These will be eagerly parsed along with the normal args and displayed in help messages.
+//! fn serve() {
+//!     println!("listening on {}", *MY_PORT);
+//! }
+//! ```
 //!
+//! # For binary authors
+//!
+//! - Validate environments eagerly to surface configuration errors that would otherwise cause
+//!   surprising behavior, such as "0" being treated as true.
+//! - Show users what environment variables may affect the program execution right in the program's
+//!   help text.
+//!
+//! ```
 //! use clap::Parser;
+//!
+//! # enventory::define! {
+//! #     /// Port to listen on
+//! #     pub static MY_PORT: u16 = 8080
+//! # }
+//! #
+//! # fn serve() {
+//! #     println!("listening on {}", *MY_PORT);
+//! # }
 //!
 //! #[derive(Parser)]
 //! struct Cli {
@@ -38,41 +41,43 @@
 //! }
 //!
 //! fn main() {
-//!     let _cli = Cli::parse();
-//!     serve();
+//!     let _ = Cli::try_parse_from(["app"]).unwrap();
+//!     serve(); // Prints "listening on 8080" if MY_PORT is not set
 //! }
+//!
 //! ```
 //!
-//! Running the program with `--help` prints:
+//! This program would immediately if MY_PORT is not a valid u16 and print the following when
+//! invoked with `--help`:
 //!
 //! ```text
-//! Usage: myhttp-bin [OPTIONS]
-//!
 //! Options:
-//!       --myhttp-port <MYHTTP_PORT>  Port to listen on [env: MYHTTP_PORT=] [default: 8080]
-//!   -h, --help                       Print help
+//!       --my-port <MY_PORT>  Port to listen on [env: MY_PORT=] [default: 8080]
+//!   -h, --help               Print help
 //! ```
 
-mod core;
 #[cfg(feature = "clap")]
-mod feat_clap;
+mod clap_ext;
 #[cfg(feature = "inventory")]
-mod feat_inventory;
+mod env_ext;
 mod macros;
+mod var;
 
 #[cfg(feature = "clap")]
-pub use feat_clap::{apply_matches, apply_matches_for, args, EnvArgs};
+pub use clap_ext::{EnvArgs, args, set_all_from_matches};
+#[doc(hidden)]
+#[cfg(feature = "inventory")]
+pub use enventory_core::Item;
+#[cfg(feature = "clap")]
+pub(crate) use enventory_core::iter;
+#[cfg(feature = "inventory")]
+pub use enventory_core::{PossibleValue, SetError};
 #[doc(hidden)]
 #[cfg(feature = "inventory")]
 pub use inventory;
 
-pub use self::core::{parse_boolish, parse_from_str, parse_some, Item};
 #[cfg(feature = "clap")]
-pub(crate) use self::feat_inventory::check_consistency;
-#[cfg(feature = "clap")]
-pub(crate) use self::feat_inventory::iter;
-#[doc(hidden)]
+pub(crate) use self::env_ext::check_consistency;
 #[cfg(feature = "inventory")]
-pub use self::feat_inventory::ItemEntry;
-#[cfg(feature = "inventory")]
-pub use self::feat_inventory::{validate_all, ParseError, ValidationErrors};
+pub use self::env_ext::{ValidationErrors, set_all_from_env};
+pub use self::var::{ParseError, Var, option_repr, parse_boolish, parse_from_str, parse_some};

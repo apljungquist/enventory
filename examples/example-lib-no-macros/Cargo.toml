@@ -1,0 +1,9 @@
+[package]
+name = "example-lib-no-macros"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+enventory = { workspace = true, features = ["inventory"] }
+inventory.workspace = true

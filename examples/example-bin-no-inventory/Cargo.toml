@@ -1,0 +1,13 @@
+[package]
+name = "example-bin-no-inventory"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+example-lib = { workspace = true }
+example-lib-no-macros = { workspace = true }
+
+[dev-dependencies]
+expect-test = { workspace = true }
+test-utils = { workspace = true }

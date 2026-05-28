@@ -1,0 +1,9 @@
+[package]
+name = "enventory-core"
+version = "0.1.0"
+edition.workspace = true
+description = "Cross-crate registration machinery for the `enventory` crate"
+license = "MIT"
+
+[dependencies]
+inventory = { workspace = true }

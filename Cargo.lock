@@ -106,44 +106,78 @@ checksum = "aeda16ab4059c5fd2a83f2b9c9e9c981327b18aa8e3b313f7e6563799d4f093e"
 
 [[package]]
 name = "enventory"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "clap",
+ "enventory-core",
+ "expect-test",
  "inventory",
 ]
 
 [[package]]
-name = "example-bin"
+name = "enventory-core"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+]
+
+[[package]]
+name = "example-bin-clap"
 version = "0.1.0"
 dependencies = [
  "clap",
  "enventory",
  "example-lib",
+ "example-lib-no-macros",
  "expect-test",
+ "test-utils",
 ]
 
 [[package]]
-name = "example-bin-lazy"
-version = "0.1.0"
-dependencies = [
- "example-lib",
- "expect-test",
-]
-
-[[package]]
-name = "example-bin-no-clap"
+name = "example-bin-inventory"
 version = "0.1.0"
 dependencies = [
  "enventory",
  "example-lib",
+ "example-lib-no-macros",
  "expect-test",
+ "test-utils",
+]
+
+[[package]]
+name = "example-bin-no-inventory"
+version = "0.1.0"
+dependencies = [
+ "example-lib",
+ "example-lib-no-macros",
+ "expect-test",
+ "test-utils",
 ]
 
 [[package]]
 name = "example-lib"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "enventory",
+]
+
+[[package]]
+name = "example-lib-no-macros"
+version = "0.1.0"
+dependencies = [
+ "enventory",
+ "inventory",
+]
+
+[[package]]
+name = "example-minimal"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "enventory",
+ "expect-test",
+ "test-utils",
 ]
 
 [[package]]
@@ -176,22 +210,6 @@ name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
-
-[[package]]
-name = "myhttp"
-version = "0.1.0"
-dependencies = [
- "enventory",
-]
-
-[[package]]
-name = "myhttp-bin"
-version = "0.1.0"
-dependencies = [
- "clap",
- "enventory",
- "myhttp",
-]
 
 [[package]]
 name = "once_cell"
@@ -245,6 +263,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "test-utils"
+version = "0.1.0"
 
 [[package]]
 name = "unicode-ident"
