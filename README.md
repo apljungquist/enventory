@@ -55,6 +55,16 @@ fn main() {
 If `MYHTTP_PORT` is set and cannot be parsed,
 then the error will be reported to the user when the arguments are parsed.
 
+Running the program with `--help` prints:
+
+```text
+Usage: myhttp-bin [OPTIONS]
+
+Options:
+      --myhttp-port <MYHTTP_PORT>  Port to listen on [env: MYHTTP_PORT=] [default: 8080]
+  -h, --help                       Print help
+```
+
 Other patterns:
 - [procedural clap](examples/example-bin/src/procedural.rs)
 - [without clap](examples/example-bin-no-clap/src/main.rs)

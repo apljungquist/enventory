@@ -42,6 +42,16 @@
 //!     serve();
 //! }
 //! ```
+//!
+//! Running the program with `--help` prints:
+//!
+//! ```text
+//! Usage: myhttp-bin [OPTIONS]
+//!
+//! Options:
+//!       --myhttp-port <MYHTTP_PORT>  Port to listen on [env: MYHTTP_PORT=] [default: 8080]
+//!   -h, --help                       Print help
+//! ```
 
 mod core;
 #[cfg(feature = "clap")]
