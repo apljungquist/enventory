@@ -7,11 +7,12 @@ license = "MIT"
 readme = "../../README.md"
 
 [dependencies]
+enventory-core = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
 
 [features]
 default = []
-inventory = ["dep:inventory"]
+inventory = ["dep:inventory", "dep:enventory-core"]
 clap = ["inventory", "dep:clap"]
 
 [dependencies.clap]

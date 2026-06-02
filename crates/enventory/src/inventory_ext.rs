@@ -1,11 +1,12 @@
-//! Eager validation and consistency checks built on top of
-//! [`crate::inventory_core`]. Binaries that want startup-time validation use this
-//! module; library crates that only register variables do not.
+//! Eager validation and consistency checks built on top of the `enventory-core`
+//! crate. Binaries that want startup-time validation use this module; library
+//! crates that only register variables do not.
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use crate::inventory_core::{Item, iter};
+use enventory_core::{Item, iter};
+
 use crate::var_core::ParseError;
 
 /// One or more environment variables that could not be parsed.
@@ -65,7 +66,11 @@ pub fn validate_all() -> Result<(), ValidationErrors> {
             continue;
         }
         if let Err(e) = entry.item.set_from_env() {
-            errors.push(e);
+            errors.push(ParseError::new(
+                e.name(),
+                e.value().to_owned(),
+                e.message().to_owned(),
+            ));
         }
     }
     if errors.is_empty() {

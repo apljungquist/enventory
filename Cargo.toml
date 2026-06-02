@@ -8,6 +8,7 @@ resolver = "2"
 [workspace.dependencies]
 clap = { version = "4", features = ["derive", "env"] }
 enventory = { path = "crates/enventory" }
+enventory-core = { path = "crates/enventory-core" }
 example-lib = { path = "examples/example-lib" }
 example-lib-no-macros = { path = "examples/example-lib-no-macros" }
 expect-test = "1"

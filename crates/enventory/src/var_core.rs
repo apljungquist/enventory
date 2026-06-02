@@ -46,6 +46,13 @@ pub struct ParseError {
 }
 
 impl ParseError {
+    pub fn new(name: &'static str, value: String, message: String) -> Self {
+        Self {
+            name,
+            value,
+            message,
+        }
+    }
     pub fn name(&self) -> &'static str {
         self.name
     }

@@ -68,15 +68,15 @@ mod var_core;
 
 #[cfg(feature = "clap")]
 pub use clap_ext::{EnvArgs, apply_matches, apply_matches_for, args};
+#[cfg(feature = "clap")]
+pub(crate) use enventory_core::iter;
+#[doc(hidden)]
+#[cfg(feature = "inventory")]
+pub use enventory_core::{Item, VarRef};
 #[doc(hidden)]
 #[cfg(feature = "inventory")]
 pub use inventory;
 
-#[cfg(feature = "clap")]
-pub(crate) use self::inventory_core::iter;
-#[doc(hidden)]
-#[cfg(feature = "inventory")]
-pub use self::inventory_core::{Item, VarRef};
 #[cfg(feature = "clap")]
 pub(crate) use self::inventory_ext::check_consistency;
 #[cfg(feature = "inventory")]

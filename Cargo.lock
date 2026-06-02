@@ -109,6 +109,14 @@ name = "enventory"
 version = "0.1.1"
 dependencies = [
  "clap",
+ "enventory-core",
+ "inventory",
+]
+
+[[package]]
+name = "enventory-core"
+version = "0.1.0"
+dependencies = [
  "inventory",
 ]
 
