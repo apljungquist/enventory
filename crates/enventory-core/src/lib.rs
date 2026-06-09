@@ -1,46 +1,45 @@
-//! Cross-crate registration machinery: the [`Item`] struct plus the
-//! `inventory::collect!` invocation.
+//! Cross-crate registration of environment variables.
 //!
-//! Most users don't touch this crate directly — `enventory::define!`
-//! ([`enventory::define`](../enventory/macro.define.html)) handles
-//! registration on their behalf, and `enventory` re-exports the few
-//! symbols a binary or hand-rolled `inventory::submit!` block needs
-//! ([`Item`], [`PossibleValue`], [`SetError`]). The crate exists as a
-//! separate unit so library crates can call `define!` without dragging
-//! `inventory` into their own dep tree; registration only activates when
-//! a downstream binary enables `enventory`'s `inventory` feature.
+//! An [`Item`] describes a single registered environment variable.
+//! Library crates submit items with [`inventory::submit!`] and
+//! binary crates discover them with [`iter`].
 //!
-//! # Vocabulary
+//! # Example
 //!
-//! [`Item`] and [`PossibleValue`] mirror the shape of `clap::Arg` /
-//! `clap::builder::PossibleValue`, but use the naming convention shared
-//! across `enventory`: builders are `with_<field>(...)`, accessors are
-//! bare `<field>()`. The constructor takes `key` (the env-var name). The
-//! one departure from clap's *vocabulary* is [`Item::with_validator`]
-//! (clap's `value_parser`): our function returns `Result<(), SetError>` —
-//! a verdict, not a parsed value — because the typed value lands in the
-//! per-variable `Var<T>` cache as a side effect, not in clap's
-//! `ArgMatches`.
+//! ```
+//! // Register an environment variable, typically from a library
+//! inventory::submit! {
+//!     enventory_core::Item::new("COLOR")
+//!         .with_help("When to print ANSI color codes")
+//! }
+//!
+//! // List registered environment variables, typically in a binary
+//! for item in enventory_core::iter() {
+//!     // Parse environment variable or print help text
+//! }
+//! ```
+//!
+//! # Why a separate crate?
+//!
+//! [`inventory`] identifies a collection by the concrete type passed to [`inventory::collect!`].
+//! If two semver-incompatible versions of the type exist in the same binary, they form two
+//! separate collections and items registered against one version are invisible to the other.
+//!
+//! By isolating the collected type in a small, stable crate that aims to *never* make a breaking
+//! change, libraries and binaries can depend on different versions of higher-level crates without
+//! splitting the collection.
 
 use std::ffi::OsStr;
 use std::fmt;
 
-/// An error returned by an [`Item`]'s validator when the supplied value
-/// cannot be parsed.
-///
-/// Opaque wrapper around the underlying parse failure. Inspect via
-/// [`Display`](fmt::Display), [`Debug`], or
-/// [`Error::source`](std::error::Error::source). The minimal shape is
-/// deliberate — structured context (env-var name, raw value, …) can be
-/// added later as fields without disturbing existing callers.
+/// An error returned by a [`Validator`].
 #[derive(Debug)]
 pub struct SetError {
     source: Box<dyn std::error::Error + Send + Sync>,
 }
 
 impl SetError {
-    /// Wrap any boxable error into a `SetError`. Used by
-    /// [`Item::with_validator`] closures to surface parse failure.
+    /// Creates a new [`SetError`] from a source that is itself an error.
     pub fn new<E>(source: E) -> Self
     where
         E: Into<Box<dyn std::error::Error + Send + Sync>>,
@@ -74,12 +73,14 @@ pub struct PossibleValue {
 }
 
 impl PossibleValue {
-    /// Construct a [`PossibleValue`] for the `name` variant.
+    /// Creates a [`PossibleValue`] for the `name` variant of an environment variable.
     pub const fn new(name: &'static str) -> Self {
         Self { name, help: None }
     }
 
-    /// Sets the short, one-line, description of the variant.
+    /// Sets the description of the variant.
+    ///
+    /// This should be short and only one line.
     pub const fn with_help(mut self, help: &'static str) -> Self {
         self.help = Some(help);
         self
@@ -96,18 +97,12 @@ impl PossibleValue {
     }
 }
 
-/// Information an environment variable to enable:
-/// - eager parsing, and
-/// - user feedback.
+/// A description of an environment variable.
 ///
-/// # Example
-///
-/// ```ignore
-/// inventory::submit! {
-///     enventory::Item::new("COLOR")
-///         .with_help("When to print ANSI color codes")
-/// }
-/// ```
+/// This may hold information that supports binary crates in:
+/// - eagerly validating input,
+/// - explaining to users what the effect of setting the environment variable is, and
+/// - explaining to users how to configure the environment variable.
 pub struct Item {
     key: &'static str,
     help: Option<&'static str>,
@@ -117,7 +112,7 @@ pub struct Item {
 }
 
 impl Item {
-    /// Construct an [`Item`] for the environment variable named `key`.
+    /// Creates an [`Item`] for the environment variable named `key`.
     pub const fn new(key: &'static str) -> Self {
         Self {
             key,
